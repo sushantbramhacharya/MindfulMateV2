@@ -9,6 +9,8 @@ import MusicPlayer from "./screens/MusicScreen";
 import KeqingScreen from "./screens/KeqingScreen"; // AI Assistant Screen
 import ProfileScreen from "./screens/ProfileScreen";
 import MoodTrackerScreen from "./screens/MoodTrackerScreen";
+import AdminDashboard from "./screens/admin/AdminDashboard";
+import UploadMusicScreen from "./screens/admin/AdminMusicScreen";
 
 function App() {
   return (
@@ -23,6 +25,8 @@ function App() {
         <Route path="/ai-assistant" element={<KeqingScreen />} />
         <Route path="/profile" element={<ProfileScreen />} />
         <Route path="/mood-tracker" element={<MoodTrackerScreen />} />
+        <Route path="/admin/dashboard" element={<AdminDashboard/>}/>
+        <Route path="/admin/upload-music" element={<UploadMusicScreen/>}/>
       </Routes>
     </>
   );
