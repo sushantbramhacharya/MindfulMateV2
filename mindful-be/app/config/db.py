@@ -1,9 +1,11 @@
+# app/config/db.py
 import psycopg2
+from psycopg2 import extras # Still needed for RealDictCursor in other modules
 import os
-from dotenv import load_dotenv
+from dotenv import load_dotenv # Import load_dotenv
 from contextlib import contextmanager
 
-load_dotenv()
+load_dotenv() # Load environment variables from .env file
 
 class DBConnection:
     """Database connection handler class"""
@@ -35,18 +37,25 @@ class DBConnection:
 
     @staticmethod
     @contextmanager
-    def get_cursor():
-        """Get a database cursor with context management"""
+    def get_cursor(dictionary=False): # Added 'dictionary' parameter back for flexibility
+        """
+        Get a database cursor with context management.
+        If dictionary=True, returns a RealDictCursor.
+        """
         with DBConnection.get_connection() as conn:
             cursor = None
             try:
-                cursor = conn.cursor()
+                if dictionary:
+                    cursor = conn.cursor(cursor_factory=extras.RealDictCursor)
+                else:
+                    cursor = conn.cursor()
                 yield cursor
-                conn.commit()
+                conn.commit() # Commit changes if no exceptions
             except Exception as e:
-                conn.rollback()
+                conn.rollback() # Rollback on any exception
                 print(f"Database operation failed: {e}")
                 raise
             finally:
                 if cursor:
                     cursor.close()
+
