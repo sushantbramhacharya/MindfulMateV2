@@ -27,7 +27,7 @@ export default function MusicScreen() {
   const [progress, setProgress] = useState(0);
   const audioRef = useRef(null);
 
-  // 🔁 Fetch songs from Flask API
+  // ✅ Fetch songs from Flask API
   useEffect(() => {
     axios
       .get("http://localhost:5000/api/music")
@@ -41,7 +41,7 @@ export default function MusicScreen() {
       });
   }, []);
 
-  // 🔁 Handle audio progress bar
+  // ✅ Handle audio progress bar
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
@@ -65,7 +65,7 @@ export default function MusicScreen() {
     const categoryCheck =
       selectedCategory === "All" || song.category === selectedCategory;
     const searchCheck =
-      song.filename?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      song.music_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       song.author?.toLowerCase().includes(searchTerm.toLowerCase());
     return categoryCheck && searchCheck;
   });
@@ -157,7 +157,7 @@ export default function MusicScreen() {
               onClick={() => {
                 setPlayingSong({
                   ...song,
-                  src: song.file_url,
+                  src: song.file_url, // ✅ URL from backend
                 });
                 setIsPlaying(false);
                 setProgress(0);
@@ -169,12 +169,12 @@ export default function MusicScreen() {
                   song.cover ||
                   "https://via.placeholder.com/200?text=No+Cover"
                 }
-                alt={song.filename || "Music Cover"}
+                alt={song.music_name || "Music Cover"}
                 className="w-20 h-20 rounded-xl object-cover shadow-inner"
               />
               <div className="flex flex-col flex-grow">
                 <span className="text-lg font-semibold text-purple-900">
-                  {song.filename}
+                  {song.music_name}
                 </span>
                 <span className="text-purple-700">{song.author}</span>
                 <span className="text-xs text-purple-400 mt-1 uppercase font-semibold tracking-wide">
@@ -198,12 +198,12 @@ export default function MusicScreen() {
                     playingSong.cover ||
                     "https://via.placeholder.com/200?text=Cover"
                   }
-                  alt={playingSong.filename}
+                  alt={playingSong.music_name}
                   className="w-16 h-16 rounded-lg object-cover shadow-md"
                 />
                 <div>
                   <h3 className="text-xl font-semibold text-purple-900">
-                    {playingSong.filename}
+                    {playingSong.music_name}
                   </h3>
                   <p className="text-purple-700">{playingSong.author}</p>
                 </div>
