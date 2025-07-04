@@ -40,6 +40,7 @@ class UserModel:
     def verify_user(email, password):
         """Verify user credentials"""
         user = UserModel.get_user_by_email(email)
+        print(f"Verifying user: {user}")
         if user and check_password_hash(user['password_hash'], password):
             return user
         return None

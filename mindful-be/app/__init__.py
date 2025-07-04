@@ -21,4 +21,10 @@ def create_app():
 
     from app.routes.exercise import exercise_bp
     app.register_blueprint(exercise_bp, url_prefix='/api')
+
+    from app.routes.comments import comments_bp
+    app.register_blueprint(comments_bp, url_prefix='/api')
+
+    from app.routes.posts import posts_bp
+    app.register_blueprint(posts_bp, url_prefix='/api')
     return app

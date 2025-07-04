@@ -1,13 +1,22 @@
-import React, { useState } from 'react';
-import {
-  FaThumbsUp,
-  FaCommentAlt,
-  FaTimes,
-} from 'react-icons/fa';
+import React, { useState, useEffect } from 'react';
+import { FaThumbsUp, FaCommentAlt, FaTimes } from 'react-icons/fa';
 import HeaderComponent from '../components/HeaderComponent';
 import FooterComponent from '../components/FooterComponent';
+import { useAuth } from '../context/AuthContext';
+import axios from 'axios';
 
-const categories = ['General', 'Tech', 'Lifestyle', 'Health', 'Education'];
+const categories = [
+  'Anxiety',
+  'Depression',
+  'Stress Management',
+  'Mindfulness',
+  'Therapy',
+  'Self-Care',
+  'Mental Wellness',
+  'Addiction',
+  'Sleep Health',
+  'Emotional Support'
+];
 
 function Post({ post, onUpvote, onComment }) {
   return (
@@ -16,8 +25,12 @@ function Post({ post, onUpvote, onComment }) {
       <p className="text-purple-700 text-base mb-4 line-clamp-3">{post.content}</p>
 
       <div className="flex justify-between items-center mb-2">
-        <span className="text-purple-400 italic text-sm">{post.timestamp}</span>
-        <span className="bg-purple-200 text-purple-800 text-xs font-semibold px-3 py-1 rounded-xl">{post.category}</span>
+        <span className="text-purple-400 italic text-sm">
+          {post.timestamp ? new Date(post.timestamp).toLocaleString() : 'Unknown date'}
+        </span>
+        <span className="bg-purple-200 text-purple-800 text-xs font-semibold px-3 py-1 rounded-xl">
+          {post.category}
+        </span>
       </div>
 
       <div className="flex justify-end items-center space-x-4">
@@ -27,7 +40,7 @@ function Post({ post, onUpvote, onComment }) {
           aria-label="Upvote post"
         >
           <FaThumbsUp className="text-lg" />
-          <span className="font-semibold">{post.upvotes}</span>
+          <span className="font-semibold">{post.upvotes_count || 0}</span>
         </button>
         <button
           onClick={() => onComment(post.id)}
@@ -43,47 +56,34 @@ function Post({ post, onUpvote, onComment }) {
 }
 
 export default function PostsScreen() {
-  const [posts, setPosts] = useState([
-    {
-      id: '1',
-      title: 'Welcome to Mindful Mate',
-      content: 'This is a dummy post to showcase the UI design. Feel free to upvote or comment!',
-      timestamp: '7/3/2025 09:00',
-      category: 'General',
-      upvotes: 5,
-    },
-    {
-      id: '2',
-      title: 'Tech Trends 2025',
-      content: 'Discover the latest tech trends shaping our world this year.',
-      timestamp: '7/2/2025 15:30',
-      category: 'Tech',
-      upvotes: 8,
-    },
-    {
-      id: '3',
-      title: 'Healthy Living Tips',
-      content: 'Simple daily habits that can improve your health significantly.',
-      timestamp: '7/1/2025 10:15',
-      category: 'Health',
-      upvotes: 3,
-    },
-  ]);
-
+  const [posts, setPosts] = useState([]);
   const [filterCategory, setFilterCategory] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('General');
+  const [selectedCategory, setSelectedCategory] = useState(categories[0]);
 
   const [showCommentModal, setShowCommentModal] = useState(false);
   const [activePost, setActivePost] = useState(null);
+  const [comments, setComments] = useState([]);
+  const [newCommentText, setNewCommentText] = useState('');
+  const { user } = useAuth();
 
-  const demoComments = [
-    { id: 1, name: 'Aarya', text: 'Thank you for sharing this!' },
-    { id: 2, name: 'Kiran', text: 'This really helped me today.' },
-    { id: 3, name: 'Ritu', text: 'Very insightful and calming.' },
-  ];
+  const API_BASE = 'http://localhost:5000/api';
+
+  useEffect(() => {
+    fetchPosts();
+  }, []);
+
+  async function fetchPosts() {
+    try {
+      const res = await axios.get(`${API_BASE}/posts`, { withCredentials: true });
+      setPosts(res.data.data);
+    } catch (error) {
+      console.error(error);
+      alert(error.response?.data?.message || 'Error fetching posts');
+    }
+  }
 
   const filteredPosts = posts.filter(post => {
     const matchesCategory = filterCategory === 'All' || post.category === filterCategory;
@@ -93,34 +93,72 @@ export default function PostsScreen() {
     return matchesCategory && matchesSearch;
   });
 
-  const handleAddPost = () => {
+  async function handleAddPost() {
     if (!title.trim() || !content.trim()) {
       alert('Title and content cannot be empty.');
       return;
     }
-    const newPost = {
-      id: (posts.length + 1).toString(),
-      title,
-      content,
-      timestamp: new Date().toLocaleString(),
-      category: selectedCategory,
-      upvotes: 0,
-    };
-    setPosts([newPost, ...posts]);
-    setTitle('');
-    setContent('');
-    setSelectedCategory('General');
-  };
 
-  const handleUpvote = (id) => {
-    setPosts(posts.map(p => (p.id === id ? { ...p, upvotes: p.upvotes + 1 } : p)));
-  };
+    try {
+      const res = await axios.post(`${API_BASE}/posts`, {
+        title,
+        content,
+        category: selectedCategory,
+      }, { withCredentials: true });
 
-  const handleComment = (id) => {
+      setPosts([res.data.data, ...posts]);
+      setTitle('');
+      setContent('');
+      setSelectedCategory(categories[0]);
+    } catch (error) {
+      console.error(error);
+      alert(error.response?.data?.message || 'Error adding post');
+    }
+  }
+
+  async function handleUpvote(id) {
+    try {
+      await axios.post(`${API_BASE}/posts/${id}/upvote`, {}, { withCredentials: true });
+      fetchPosts(); // Reload posts after upvote toggle
+    } catch (error) {
+      console.error(error);
+      alert(error.response?.data?.message || 'Error upvoting post');
+    }
+  }
+
+  async function handleComment(id) {
     const post = posts.find(p => p.id === id);
     setActivePost(post);
     setShowCommentModal(true);
-  };
+
+    try {
+      const res = await axios.get(`${API_BASE}/posts/${id}/comments`, { withCredentials: true });
+      setComments(res.data.data);
+    } catch (error) {
+      console.error(error);
+      alert(error.response?.data?.message || 'Error fetching comments');
+    }
+  }
+
+  async function handlePostComment() {
+    if (!newCommentText.trim()) {
+      alert('Comment cannot be empty');
+      return;
+    }
+
+    try {
+      const res = await axios.post(
+        `${API_BASE}/posts/${activePost.id}/comments`,
+        { author: user.email, text: newCommentText },
+        { withCredentials: true }
+      );
+      setComments([...comments, res.data.data]);
+      setNewCommentText('');
+    } catch (error) {
+      console.error(error);
+      alert(error.response?.data?.message || 'Error posting comment');
+    }
+  }
 
   return (
     <div className="min-h-screen bg-purple-50">
@@ -141,8 +179,10 @@ export default function PostsScreen() {
             onChange={(e) => setFilterCategory(e.target.value)}
           >
             <option value="All">All Categories</option>
-            {categories.map(c => (
-              <option key={c} value={c}>{c}</option>
+            {categories.map((c) => (
+              <option key={c} value={c}>
+                {c}
+              </option>
             ))}
           </select>
         </div>
@@ -170,8 +210,10 @@ export default function PostsScreen() {
               onChange={(e) => setSelectedCategory(e.target.value)}
               className="border border-purple-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-400"
             >
-              {categories.map(c => (
-                <option key={c} value={c}>{c}</option>
+              {categories.map((c) => (
+                <option key={c} value={c}>
+                  {c}
+                </option>
               ))}
             </select>
             <button
@@ -187,7 +229,7 @@ export default function PostsScreen() {
         {filteredPosts.length === 0 ? (
           <p className="text-center text-purple-600">No posts found.</p>
         ) : (
-          filteredPosts.map(post => (
+          filteredPosts.map((post) => (
             <Post key={post.id} post={post} onUpvote={handleUpvote} onComment={handleComment} />
           ))
         )}
@@ -204,6 +246,8 @@ export default function PostsScreen() {
                   onClick={() => {
                     setShowCommentModal(false);
                     setActivePost(null);
+                    setComments([]);
+                    setNewCommentText('');
                   }}
                   className="text-purple-600 hover:text-purple-900 text-xl"
                 >
@@ -212,21 +256,30 @@ export default function PostsScreen() {
               </div>
 
               <div className="space-y-4 max-h-60 overflow-y-auto">
-                {demoComments.map(comment => (
-                  <div key={comment.id} className="bg-purple-50 p-3 rounded-xl border border-purple-200">
-                    <p className="text-sm text-purple-900 font-semibold">{comment.name}</p>
-                    <p className="text-sm text-purple-700">{comment.text}</p>
-                  </div>
-                ))}
+                {comments.length === 0 ? (
+                  <p className="text-purple-600 text-center">No comments yet.</p>
+                ) : (
+                  comments.map((comment) => (
+                    <div key={comment.id} className="bg-purple-50 p-3 rounded-xl border border-purple-200">
+                      <p className="text-sm text-purple-900 font-semibold">{comment.author || 'Anonymous'}</p>
+                      <p className="text-sm text-purple-700">{comment.text}</p>
+                    </div>
+                  ))
+                )}
               </div>
 
               <div className="mt-4 flex items-center gap-2">
                 <input
                   type="text"
                   placeholder="Write a comment..."
+                  value={newCommentText}
+                  onChange={(e) => setNewCommentText(e.target.value)}
                   className="flex-grow border border-purple-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-400"
                 />
-                <button className="bg-purple-600 hover:bg-purple-800 text-white px-4 py-2 rounded">
+                <button
+                  onClick={handlePostComment}
+                  className="bg-purple-600 hover:bg-purple-800 text-white px-4 py-2 rounded"
+                >
                   Post
                 </button>
               </div>
