@@ -18,4 +18,7 @@ def create_app():
     from app.routes.music import music_bp
 
     app.register_blueprint(music_bp ,url_prefix='/api')
+
+    from app.routes.exercise import exercise_bp
+    app.register_blueprint(exercise_bp, url_prefix='/api')
     return app

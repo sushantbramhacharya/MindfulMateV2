@@ -11,6 +11,8 @@ import ProfileScreen from "./screens/ProfileScreen";
 import MoodTrackerScreen from "./screens/MoodTrackerScreen";
 import AdminDashboard from "./screens/admin/AdminDashboard";
 import UploadMusicScreen from "./screens/admin/AdminMusicScreen";
+import ExerciseScreen from "./screens/ExerciseScreen";
+import ExerciseManagerScreen from "./screens/admin/AdminExerciseScreen";
 
 function App() {
   return (
@@ -21,12 +23,14 @@ function App() {
         <Route path="/dashboard" element={<DashboardScreen />} />
         <Route path="/posts" element={<PostsScreen />} />
         <Route path="/breathing" element={<BreathingExerciseScreen />} />
+        <Route path="/exercise" element={<ExerciseScreen />} />
         <Route path="/music" element={<MusicPlayer />} />
         <Route path="/ai-assistant" element={<KeqingScreen />} />
         <Route path="/profile" element={<ProfileScreen />} />
         <Route path="/mood-tracker" element={<MoodTrackerScreen />} />
         <Route path="/admin/dashboard" element={<AdminDashboard/>}/>
         <Route path="/admin/upload-music" element={<UploadMusicScreen/>}/>
+        <Route path="/admin/upload-exercise" element={<ExerciseManagerScreen/>}/>
       </Routes>
     </>
   );

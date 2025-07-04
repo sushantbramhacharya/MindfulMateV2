@@ -31,7 +31,7 @@ const DashboardScreen = () => {
       title: "Exercises",
       description: "Stay present and focused",
       icon: "🧘",
-      onClick: () => navigate('/mindfulness'),
+      onClick: () => navigate('/exercise'),
     },
     {
       title: "Meditations Sessions",

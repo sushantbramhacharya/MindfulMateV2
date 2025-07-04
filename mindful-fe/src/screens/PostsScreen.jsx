@@ -1,5 +1,9 @@
 import React, { useState } from 'react';
-
+import {
+  FaThumbsUp,
+  FaCommentAlt,
+  FaTimes,
+} from 'react-icons/fa';
 import HeaderComponent from '../components/HeaderComponent';
 import FooterComponent from '../components/FooterComponent';
 
@@ -22,9 +26,7 @@ function Post({ post, onUpvote, onComment }) {
           className="flex items-center space-x-1 text-purple-600 hover:text-purple-900"
           aria-label="Upvote post"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
-            <path d="M2 21h4V9H2v12zm19-11h-6.31l.95-4.57.03-.32a1.003 1.003 0 0 0-1.66-.77L7 11v9h9c.83 0 1.54-.5 1.84-1.22l3.02-7.05a1 1 0 0 0-.86-1.43z" />
-          </svg>
+          <FaThumbsUp className="text-lg" />
           <span className="font-semibold">{post.upvotes}</span>
         </button>
         <button
@@ -32,9 +34,7 @@ function Post({ post, onUpvote, onComment }) {
           className="flex items-center space-x-1 text-purple-600 hover:text-purple-900"
           aria-label="Comment on post"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M7 8h10M7 12h6m-4 8v-4a4 4 0 0 1 4-4h1" />
-          </svg>
+          <FaCommentAlt className="text-lg" />
           <span className="font-semibold">Comment</span>
         </button>
       </div>
@@ -76,9 +76,20 @@ export default function PostsScreen() {
   const [content, setContent] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('General');
 
+  const [showCommentModal, setShowCommentModal] = useState(false);
+  const [activePost, setActivePost] = useState(null);
+
+  const demoComments = [
+    { id: 1, name: 'Aarya', text: 'Thank you for sharing this!' },
+    { id: 2, name: 'Kiran', text: 'This really helped me today.' },
+    { id: 3, name: 'Ritu', text: 'Very insightful and calming.' },
+  ];
+
   const filteredPosts = posts.filter(post => {
     const matchesCategory = filterCategory === 'All' || post.category === filterCategory;
-    const matchesSearch = post.title.toLowerCase().includes(searchQuery.toLowerCase()) || post.content.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesSearch =
+      post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      post.content.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesCategory && matchesSearch;
   });
 
@@ -102,11 +113,13 @@ export default function PostsScreen() {
   };
 
   const handleUpvote = (id) => {
-    setPosts(posts.map(p => p.id === id ? { ...p, upvotes: p.upvotes + 1 } : p));
+    setPosts(posts.map(p => (p.id === id ? { ...p, upvotes: p.upvotes + 1 } : p)));
   };
 
   const handleComment = (id) => {
-    alert(`Open comments for post id: ${id} (dummy)`);
+    const post = posts.find(p => p.id === id);
+    setActivePost(post);
+    setShowCommentModal(true);
   };
 
   return (
@@ -175,15 +188,53 @@ export default function PostsScreen() {
           <p className="text-center text-purple-600">No posts found.</p>
         ) : (
           filteredPosts.map(post => (
-            <Post
-              key={post.id}
-              post={post}
-              onUpvote={handleUpvote}
-              onComment={handleComment}
-            />
+            <Post key={post.id} post={post} onUpvote={handleUpvote} onComment={handleComment} />
           ))
         )}
+
+        {/* 💬 Comment Modal */}
+        {showCommentModal && activePost && (
+          <div className="fixed inset-0 bg-purple-200/30 backdrop-blur-sm flex items-end justify-center z-50">
+            <div className="bg-white w-full max-w-xl rounded-t-3xl p-6 shadow-lg">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-xl font-bold text-purple-800">
+                  💬 Comments on "{activePost.title}"
+                </h3>
+                <button
+                  onClick={() => {
+                    setShowCommentModal(false);
+                    setActivePost(null);
+                  }}
+                  className="text-purple-600 hover:text-purple-900 text-xl"
+                >
+                  <FaTimes />
+                </button>
+              </div>
+
+              <div className="space-y-4 max-h-60 overflow-y-auto">
+                {demoComments.map(comment => (
+                  <div key={comment.id} className="bg-purple-50 p-3 rounded-xl border border-purple-200">
+                    <p className="text-sm text-purple-900 font-semibold">{comment.name}</p>
+                    <p className="text-sm text-purple-700">{comment.text}</p>
+                  </div>
+                ))}
+              </div>
+
+              <div className="mt-4 flex items-center gap-2">
+                <input
+                  type="text"
+                  placeholder="Write a comment..."
+                  className="flex-grow border border-purple-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-400"
+                />
+                <button className="bg-purple-600 hover:bg-purple-800 text-white px-4 py-2 rounded">
+                  Post
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </main>
+      <FooterComponent />
     </div>
   );
 }
