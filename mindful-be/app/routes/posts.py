@@ -98,8 +98,8 @@ def delete_post(post_id):
 
 @posts_bp.route('/posts/<int:post_id>/upvote', methods=['POST'])
 @JWTConfig.token_required
-def upvote_post(post_id):
-    user_id = request.user_id  # assuming your token_required sets request.user_id
+def upvote_post(current_user, post_id):
+    user_id = current_user['user_id']
 
     try:
         with DBConnection.get_cursor() as cursor:

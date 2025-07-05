@@ -53,3 +53,10 @@ CREATE TABLE post_upvotes (
 );
 
 
+CREATE TABLE moods (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER NOT NULL,
+  mood TEXT NOT NULL,
+  notes TEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);

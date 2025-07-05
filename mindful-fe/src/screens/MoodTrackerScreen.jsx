@@ -7,22 +7,20 @@ import {
   FaAngry,
   FaGrinStars,
 } from "react-icons/fa";
-import { useAuth } from "../context/AuthContext";
 import HeaderComponent from "../components/HeaderComponent";
 import axios from "axios";
+import MoodLineChart from "../components/MoodLineChartComponent";
 
 const moods = [
-  { name: 'Happy', icon: FaSmile, bg: 'bg-green-500', border: 'border-green-700', text: 'text-green-600', hover: 'hover:bg-green-50' },
-  { name: 'Neutral', icon: FaMeh, bg: 'bg-amber-500', border: 'border-amber-700', text: 'text-amber-600', hover: 'hover:bg-amber-50' },
-  { name: 'Sad', icon: FaFrown, bg: 'bg-blue-500', border: 'border-blue-700', text: 'text-blue-600', hover: 'hover:bg-blue-50' },
-  { name: 'Anxious', icon: FaTired, bg: 'bg-orange-500', border: 'border-orange-700', text: 'text-orange-600', hover: 'hover:bg-orange-50' },
-  { name: 'Angry', icon: FaAngry, bg: 'bg-red-500', border: 'border-red-700', text: 'text-red-600', hover: 'hover:bg-red-50' },
-  { name: 'Excited', icon: FaGrinStars, bg: 'bg-pink-500', border: 'border-pink-700', text: 'text-pink-600', hover: 'hover:bg-pink-50' },
+  { name: "Happy", icon: FaSmile, bg: "bg-green-500", border: "border-green-700", text: "text-green-600", hover: "hover:bg-green-50" },
+  { name: "Neutral", icon: FaMeh, bg: "bg-amber-500", border: "border-amber-700", text: "text-amber-600", hover: "hover:bg-amber-50" },
+  { name: "Sad", icon: FaFrown, bg: "bg-blue-500", border: "border-blue-700", text: "text-blue-600", hover: "hover:bg-blue-50" },
+  { name: "Anxious", icon: FaTired, bg: "bg-orange-500", border: "border-orange-700", text: "text-orange-600", hover: "hover:bg-orange-50" },
+  { name: "Angry", icon: FaAngry, bg: "bg-red-500", border: "border-red-700", text: "text-red-600", hover: "hover:bg-red-50" },
+  { name: "Excited", icon: FaGrinStars, bg: "bg-pink-500", border: "border-pink-700", text: "text-pink-600", hover: "hover:bg-pink-50" },
 ];
 
-
 const MoodTrackerScreen = () => {
-  const { user, token } = useAuth();
   const [selectedMood, setSelectedMood] = useState(null);
   const [notes, setNotes] = useState("");
   const [moodHistory, setMoodHistory] = useState([]);
@@ -32,16 +30,19 @@ const MoodTrackerScreen = () => {
   const baseUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
 
   useEffect(() => {
-    if (token) fetchMoodHistory();
-  }, [token]);
+    fetchMoodHistory();
+  }, []);
 
   const fetchMoodHistory = async () => {
     setLoading(true);
     try {
       const res = await axios.get(`${baseUrl}/api/moods`, {
-        headers: { Authorization: `Bearer ${token}` },
+        withCredentials: true,
       });
-      setMoodHistory(res.data);
+      const sorted = (res.data || [])
+        .sort((a, b) => new Date(a.created_at) - new Date(b.created_at))
+        .slice(-10);
+      setMoodHistory(sorted);
     } catch (err) {
       console.error("Failed to fetch mood history:", err);
     } finally {
@@ -56,7 +57,7 @@ const MoodTrackerScreen = () => {
       await axios.post(
         `${baseUrl}/api/moods`,
         { mood: selectedMood, notes },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { withCredentials: true }
       );
       setSelectedMood(null);
       setNotes("");
@@ -75,11 +76,17 @@ const MoodTrackerScreen = () => {
       <HeaderComponent />
 
       <div className="max-w-3xl mx-auto px-4 py-8">
+        {/* Use the MoodLineChart component here */}
         <h2 className="text-3xl font-bold text-purple-800 text-center mb-6">
+          Recent Mood Logs
+        </h2>
+        <MoodLineChart moodHistory={moodHistory} />
+
+        {/* Mood Tracker UI */}
+        <h2 className="text-3xl font-bold text-purple-800 text-center mb-6 mt-12">
           How are you feeling today?
         </h2>
 
-        {/* Mood Grid */}
         <div className="grid grid-cols-3 md:grid-cols-6 gap-4 mb-6">
           {moods.map(({ name, icon: Icon, bg, border, text, hover }) => {
             const isSelected = selectedMood === name;
@@ -90,17 +97,10 @@ const MoodTrackerScreen = () => {
                 className={`flex flex-col items-center p-4 rounded-xl border-2 transition duration-200 ${
                   isSelected
                     ? `${bg} text-white ${border} shadow-lg`
-                    : `bg-white ${text} ${border.replace(
-                        "700",
-                        "300"
-                      )} ${hover}`
+                    : `bg-white ${text} ${border.replace("700", "300")} ${hover}`
                 }`}
               >
-                <div
-                  className={`text-3xl mb-2 ${
-                    isSelected ? "text-white" : text
-                  }`}
-                >
+                <div className={`text-3xl mb-2 ${isSelected ? "text-white" : text}`}>
                   <Icon />
                 </div>
                 <span className="font-semibold">{name}</span>
@@ -109,7 +109,6 @@ const MoodTrackerScreen = () => {
           })}
         </div>
 
-        {/* Notes */}
         <textarea
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
@@ -118,7 +117,6 @@ const MoodTrackerScreen = () => {
           rows={3}
         />
 
-        {/* Log Button */}
         <button
           onClick={handleLogMood}
           disabled={logLoading}
@@ -127,37 +125,28 @@ const MoodTrackerScreen = () => {
           {logLoading ? "Logging..." : "Log My Mood"}
         </button>
 
-        {/* Mood History */}
         <div className="mt-10">
           <h3 className="text-2xl font-bold text-purple-800 mb-4 text-center">
             Your Mood History
           </h3>
 
           {loading ? (
-            <p className="text-center text-purple-500">
-              Loading mood history...
-            </p>
+            <p className="text-center text-purple-500">Loading mood history...</p>
           ) : moodHistory.length === 0 ? (
             <p className="text-center text-purple-500">No mood entries yet.</p>
           ) : (
             <div className="space-y-4">
               {moodHistory.map((entry) => (
                 <div
-                  key={entry._id}
+                  key={entry.id || entry._id}
                   className="bg-white border border-purple-200 p-4 rounded-xl shadow-sm"
                 >
                   <div className="flex justify-between">
-                    <span className="font-semibold text-purple-800">
-                      Mood: {entry.mood}
-                    </span>
-                    <span className="text-sm text-purple-500">
-                      {formatDate(entry.created_at)}
-                    </span>
+                    <span className="font-semibold text-purple-800">Mood: {entry.mood}</span>
+                    <span className="text-sm text-purple-500">{formatDate(entry.created_at)}</span>
                   </div>
                   {entry.notes && (
-                    <p className="mt-2 text-purple-700 italic">
-                      Notes: {entry.notes}
-                    </p>
+                    <p className="mt-2 text-purple-700 italic">Notes: {entry.notes}</p>
                   )}
                 </div>
               ))}

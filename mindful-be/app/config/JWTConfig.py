@@ -39,7 +39,7 @@ class JWTConfig:
 
     @staticmethod
     def token_required(f):
-        """Decorator for protecting routes with JWT"""
+        """Decorator for protecting routes with JWT and injecting current user"""
         @wraps(f)
         def decorated(*args, **kwargs):
             token = request.cookies.get(JWTConfig.COOKIE_NAME)
@@ -51,9 +51,11 @@ class JWTConfig:
             if not payload:
                 return jsonify({'error': 'Invalid or expired token'}), 401
             
-            # Add user info to the request context
-            request.user_id = payload['user_id']
-            request.user_email = payload['email']
+            current_user = {
+                'user_id': payload['user_id'],
+                'email': payload['email']
+            }
             
-            return f(*args, **kwargs)
+            # Pass current_user to the decorated function as a kwarg
+            return f(current_user=current_user, *args, **kwargs)
         return decorated

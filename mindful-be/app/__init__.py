@@ -27,4 +27,7 @@ def create_app():
 
     from app.routes.posts import posts_bp
     app.register_blueprint(posts_bp, url_prefix='/api')
+
+    from app.routes.moods import moods_bp
+    app.register_blueprint(moods_bp, url_prefix='/api')
     return app
