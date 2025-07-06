@@ -15,8 +15,8 @@ def create_app():
     # Register blueprints
     app.register_blueprint(auth_bp, url_prefix='/api/auth')
     app.register_blueprint(protected_bp, url_prefix='/api/protected')
+    
     from app.routes.music import music_bp
-
     app.register_blueprint(music_bp ,url_prefix='/api')
 
     from app.routes.exercise import exercise_bp
@@ -30,4 +30,7 @@ def create_app():
 
     from app.routes.moods import moods_bp
     app.register_blueprint(moods_bp, url_prefix='/api')
+
+    from app.routes.predict import prediction_bp
+    app.register_blueprint(prediction_bp, url_prefix='/api')
     return app

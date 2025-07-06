@@ -13,6 +13,8 @@ import AdminDashboard from "./screens/admin/AdminDashboard";
 import UploadMusicScreen from "./screens/admin/AdminMusicScreen";
 import ExerciseScreen from "./screens/ExerciseScreen";
 import ExerciseManagerScreen from "./screens/admin/AdminExerciseScreen";
+import CallHelplineScreen from "./screens/HelplineScreen";
+import ChatExpertScreen from "./screens/ExpertScreen"; // Expert Consultation Screen
 
 function App() {
   return (
@@ -26,6 +28,8 @@ function App() {
         <Route path="/exercise" element={<ExerciseScreen />} />
         <Route path="/music" element={<MusicPlayer />} />
         <Route path="/ai-assistant" element={<KeqingScreen />} />
+        <Route path="/helpline" element={<CallHelplineScreen />} />
+        <Route path="/chat-expert" element={<ChatExpertScreen />} />
         <Route path="/profile" element={<ProfileScreen />} />
         <Route path="/mood-tracker" element={<MoodTrackerScreen />} />
         <Route path="/admin/dashboard" element={<AdminDashboard/>}/>

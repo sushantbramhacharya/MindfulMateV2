@@ -28,16 +28,16 @@ const DashboardScreen = () => {
       onClick: () => navigate('/breathing'),
     },
     {
-      title: "Exercises",
+      title: "Exercises and Meditations",
       description: "Stay present and focused",
       icon: "🧘",
       onClick: () => navigate('/exercise'),
     },
     {
-      title: "Meditations Sessions",
-      description: "Gentle Meditations for mental wellness",
-      icon: "🧘‍♀️",
-      onClick: () => navigate('/yoga'),
+      title: "Call Helpline",
+      description: "Reach out for immediate support",
+      icon: "📞",
+      onClick: () => navigate('/helpline'),
     },
     {
       title: "Posts",
