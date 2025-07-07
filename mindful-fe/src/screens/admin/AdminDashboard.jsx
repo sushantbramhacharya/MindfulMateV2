@@ -1,9 +1,20 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import HeaderComponent from "../../components/HeaderComponent";
+import { useAuth } from "../../context/AuthContext";
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
+  const {user}=useAuth();
+
+  useEffect(() => {
+    // Redirect to login if user is not authenticated or not an admin
+    if (user === null) return;
+ 
+    if (user.id !== 4) {
+      navigate("/unauthorized");
+    }
+  }, [user, navigate]);
 
   const features = [
     {

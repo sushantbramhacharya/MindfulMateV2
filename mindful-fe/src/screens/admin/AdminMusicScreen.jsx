@@ -1,7 +1,19 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
-
+import { useAuth } from '../../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 const App = () => {
+  const {user}=useAuth();
+  const navigate = useNavigate();
+
+    useEffect(() => {
+      // Redirect to login if user is not authenticated or not an admin
+      if (user === null) return;
+   
+      if (user.id !== 4) {
+        navigate("/unauthorized");
+      }
+    }, [user, navigate]);
   const [musicList, setMusicList] = useState([]);
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);

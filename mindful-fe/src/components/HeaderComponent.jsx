@@ -1,6 +1,6 @@
 import React from "react";
 import { useAuth } from "../context/AuthContext";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 
 const HeaderComponent = () => {
@@ -31,6 +31,14 @@ const HeaderComponent = () => {
         <span className="hidden md:inline text-purple-800 text-sm">
           Welcome, {user?.email}
         </span>
+        {user?.id === 4 && (
+          <Link
+            to="/admin/dashboard"
+            className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-full text-sm shadow-md transition"
+          >
+            Admin Panel
+          </Link>
+          )}
         <button
           onClick={handleLogout}
           className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-full text-sm shadow-md transition"

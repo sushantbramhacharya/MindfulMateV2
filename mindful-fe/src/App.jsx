@@ -15,6 +15,7 @@ import ExerciseScreen from "./screens/ExerciseScreen";
 import ExerciseManagerScreen from "./screens/admin/AdminExerciseScreen";
 import CallHelplineScreen from "./screens/HelplineScreen";
 import ChatExpertScreen from "./screens/ExpertScreen"; // Expert Consultation Screen
+import UnauthorizedScreen from "./screens/UnauthorizedScreen";
 
 function App() {
   return (
@@ -27,6 +28,7 @@ function App() {
         <Route path="/breathing" element={<BreathingExerciseScreen />} />
         <Route path="/exercise" element={<ExerciseScreen />} />
         <Route path="/music" element={<MusicPlayer />} />
+        <Route path="/unauthorized" element={<UnauthorizedScreen />} />
         <Route path="/ai-assistant" element={<KeqingScreen />} />
         <Route path="/helpline" element={<CallHelplineScreen />} />
         <Route path="/chat-expert" element={<ChatExpertScreen />} />

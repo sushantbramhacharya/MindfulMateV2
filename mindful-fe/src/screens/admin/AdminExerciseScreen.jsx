@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import HeaderComponent from "../../components/HeaderComponent";
-
+import { useAuth } from "../../context/AuthContext";
+import { useNavigate } from "react-router-dom";
 const categories = ["Strength", "Cardio", "Stretching", "Yoga", "Warm-Up"];
 
 const initialExercise = {
@@ -14,6 +15,17 @@ const initialExercise = {
 };
 
 export default function ExerciseManagerScreen() {
+  const navigate = useNavigate();
+  const {user}=useAuth();
+  
+    useEffect(() => {
+      // Redirect to login if user is not authenticated or not an admin
+      if (user === null) return;
+   
+      if (user.id !== 4) {
+        navigate("/unauthorized");
+      }
+    }, [user, navigate]);
   const [exercise, setExercise] = useState({ ...initialExercise });
   const [exercises, setExercises] = useState([]);
   const [previewUrl, setPreviewUrl] = useState(null);
