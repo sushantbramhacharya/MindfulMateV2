@@ -23,7 +23,7 @@ const HeaderComponent = () => {
         onClick={handleLogoClick}
         className="flex items-center cursor-pointer select-none"
       >
-        <img src="assets/logo-2.png" alt="Mindful Mate Logo" className="h-8 mr-3" />
+        <img src="/assets/logo-2.png" alt="Mindful Mate Logo" className="h-8 mr-3" />
         <h1 className="text-2xl font-bold text-purple-900">Mindful Mate</h1>
       </div>
 

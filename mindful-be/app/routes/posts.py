@@ -28,7 +28,7 @@ def get_posts():
 
 @posts_bp.route('/posts', methods=['POST'])
 @JWTConfig.token_required
-def create_post():
+def create_post(current_user):
     data = request.get_json()
     title = data.get('title')
     content = data.get('content')

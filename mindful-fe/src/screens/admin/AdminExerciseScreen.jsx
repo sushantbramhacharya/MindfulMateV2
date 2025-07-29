@@ -3,7 +3,7 @@ import axios from "axios";
 import HeaderComponent from "../../components/HeaderComponent";
 import { useAuth } from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
-const categories = ["Strength", "Cardio", "Stretching", "Yoga", "Warm-Up"];
+const categories = ["Anxiety and stress", "Depression", "Normal", "Personal Disorder", "Yoga"];
 
 const initialExercise = {
   title: "",

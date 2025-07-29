@@ -29,12 +29,12 @@ const AdminDashboard = () => {
       icon: "🧘‍♂️",
       onClick: () => navigate("/admin/upload-exercise"),
     },
-    {
-      title: "Upload Meditation",
-      description: "Add new guided meditations",
-      icon: "🧘‍♀️",
-      onClick: () => navigate("/admin/upload-meditation"),
-    },
+    // {
+    //   title: "Upload Meditation",
+    //   description: "Add new guided meditations",
+    //   icon: "🧘‍♀️",
+    //   onClick: () => navigate("/admin/upload-meditation"),
+    // },
   ];
 
   return (

@@ -9,11 +9,7 @@ import axios from "axios";
 
 const exerciseCategories = [
   "All",
-  "Strength",
-  "Cardio",
-  "Stretching",
-  "Yoga",
-  "Warm-Up",
+ "Anxiety and stress", "Depression", "Normal", "Personal Disorder", "Yoga"
 ];
 
 export default function ExerciseScreen() {
@@ -112,7 +108,7 @@ export default function ExerciseScreen() {
               className="cursor-pointer flex gap-4 items-center bg-green-50 rounded-2xl p-4 shadow-md hover:shadow-lg transition"
             >
               <img
-                src={ex.image || "https://via.placeholder.com/200?text=No+Image"}
+                src={ex.image || "https://www.shutterstock.com/image-vector/vector-set-character-performing-fitness-600nw-2501497817.jpg"}
                 alt={ex.title}
                 className="w-20 h-20 rounded-xl object-cover shadow-inner"
               />

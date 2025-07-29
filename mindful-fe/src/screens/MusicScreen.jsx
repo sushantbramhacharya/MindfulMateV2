@@ -10,12 +10,7 @@ import {
 import HeaderComponent from "../components/HeaderComponent";
 
 const categories = [
-  "All",
-  "Meditation",
-  "Focus",
-  "Relaxation",
-  "Sleep",
-  "Mood Boost",
+  'All','Relaxation', 'Focus', 'Sleep', 'Stress Relief', 'Meditation', 'Nature', 'Ambient', 'Mood Boost', 'Nature immersive', 'Affirmation', 'Brain wave', 'Muscle relaxation'
 ];
 
 export default function MusicScreen() {
@@ -167,7 +162,7 @@ export default function MusicScreen() {
               <img
                 src={
                   song.cover ||
-                  "https://via.placeholder.com/200?text=No+Cover"
+                  "https://www.shutterstock.com/image-photo/retro-golden-microphone-headphones-on-600nw-694098472.jpg"
                 }
                 alt={song.music_name || "Music Cover"}
                 className="w-20 h-20 rounded-xl object-cover shadow-inner"

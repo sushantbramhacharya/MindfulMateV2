@@ -30,7 +30,7 @@ const App = () => {
   const [file, setFile] = useState(null);
   const [musicName, setMusicName] = useState('');
 
-  const categories = ['Relaxation', 'Focus', 'Sleep', 'Stress Relief', 'Meditation', 'Nature', 'Ambient'];
+  const categories = ['Relaxation', 'Focus', 'Sleep', 'Stress Relief', 'Meditation', 'Nature', 'Ambient', 'Mood Boost', 'Nature immersive', 'Affirmation', 'Brain wave', 'Muscle relaxation'];
 
   useEffect(() => { fetchMusic(); }, []);
   useEffect(() => {
