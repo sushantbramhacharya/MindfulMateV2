@@ -1,15 +1,15 @@
 import React, { useState, useEffect } from "react";
-import {
-  FaSearch,
-  FaTimes,
-  FaRunning,
-} from "react-icons/fa";
+import { FaSearch, FaTimes, FaRunning } from "react-icons/fa";
 import HeaderComponent from "../components/HeaderComponent";
 import axios from "axios";
 
 const exerciseCategories = [
   "All",
- "Anxiety and stress", "Depression", "Normal", "Personal Disorder", "Yoga"
+  "Anxiety and stress",
+  "Depression",
+  "Normal",
+  "Personal Disorder",
+  "Yoga",
 ];
 
 export default function ExerciseScreen() {
@@ -108,7 +108,10 @@ export default function ExerciseScreen() {
               className="cursor-pointer flex gap-4 items-center bg-green-50 rounded-2xl p-4 shadow-md hover:shadow-lg transition"
             >
               <img
-                src={ex.image || "https://www.shutterstock.com/image-vector/vector-set-character-performing-fitness-600nw-2501497817.jpg"}
+                src={
+                  ex.image ||
+                  "https://www.shutterstock.com/image-vector/vector-set-character-performing-fitness-600nw-2501497817.jpg"
+                }
                 alt={ex.title}
                 className="w-20 h-20 rounded-xl object-cover shadow-inner"
               />
@@ -162,15 +165,19 @@ export default function ExerciseScreen() {
 
             {/* VIDEO PLAYER */}
             {selectedExercise.video_url && (
-              <video
-                src={selectedExercise.video_url}
-                controls
-                className="w-full rounded-xl shadow-md mb-4"
-              />
-            )}
+  <div className="relative w-full pb-[56.25%] rounded-xl overflow-hidden shadow-md mb-4 bg-black">
+    <video
+      src={selectedExercise.video_url}
+      controls
+      className="absolute top-0 left-0 w-full h-full object-contain"
+    />
+  </div>
+)}
 
             {/* Description */}
-            <p className="text-green-700 mb-2">{selectedExercise.description}</p>
+            <p className="text-green-700 mb-2">
+              {selectedExercise.description}
+            </p>
 
             {/* STEPS */}
             {selectedExercise.steps?.length > 0 && (
