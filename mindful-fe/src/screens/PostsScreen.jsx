@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FaThumbsUp, FaCommentAlt, FaTimes } from 'react-icons/fa';
+import { FaThumbsUp, FaCommentAlt, FaTrash, FaTimes } from 'react-icons/fa';
 import HeaderComponent from '../components/HeaderComponent';
 import FooterComponent from '../components/FooterComponent';
 import { useAuth } from '../context/AuthContext';
@@ -18,38 +18,48 @@ const categories = [
   'Emotional Support'
 ];
 
-function Post({ post, onUpvote, onComment }) {
+function Post({ post, onUpvote, onComment, onDelete, currentUserId }) {
+  const isOwner = post.author_id === currentUserId;
+
   return (
     <div className="bg-white rounded-2xl p-6 shadow-md mb-4 border border-purple-300">
       <h3 className="text-purple-900 font-bold text-xl mb-2">{post.title}</h3>
-      <p className="text-purple-700 text-base mb-4 line-clamp-3">{post.content}</p>
+      <p className="text-purple-700 text-base mb-2 line-clamp-3">{post.content}</p>
 
-      <div className="flex justify-between items-center mb-2">
-        <span className="text-purple-400 italic text-sm">
-          {post.timestamp ? new Date(post.timestamp).toLocaleString() : 'Unknown date'}
-        </span>
+      <div className="flex justify-between items-center text-sm text-purple-600 mb-2">
+        <span>{post.author_name || 'Unknown author'}</span>
+        <span>{post.timestamp ? new Date(post.timestamp).toLocaleString() : 'Unknown date'}</span>
+      </div>
+
+      <div className="flex justify-between items-center">
         <span className="bg-purple-200 text-purple-800 text-xs font-semibold px-3 py-1 rounded-xl">
           {post.category}
         </span>
-      </div>
-
-      <div className="flex justify-end items-center space-x-4">
-        <button
-          onClick={() => onUpvote(post.id)}
-          className="flex items-center space-x-1 text-purple-600 hover:text-purple-900"
-          aria-label="Upvote post"
-        >
-          <FaThumbsUp className="text-lg" />
-          <span className="font-semibold">{post.upvotes_count || 0}</span>
-        </button>
-        <button
-          onClick={() => onComment(post.id)}
-          className="flex items-center space-x-1 text-purple-600 hover:text-purple-900"
-          aria-label="Comment on post"
-        >
-          <FaCommentAlt className="text-lg" />
-          <span className="font-semibold">Comment</span>
-        </button>
+        <div className="flex items-center gap-4">
+          <button
+            onClick={() => onUpvote(post.id)}
+            className="flex items-center gap-1 text-purple-600 hover:text-purple-900"
+          >
+            <FaThumbsUp className="text-lg" />
+            <span>{post.upvotes_count || 0}</span>
+          </button>
+          <button
+            onClick={() => onComment(post.id)}
+            className="flex items-center gap-1 text-purple-600 hover:text-purple-900"
+          >
+            <FaCommentAlt className="text-lg" />
+            <span>Comment</span>
+          </button>
+          {isOwner && (
+            <button
+              onClick={() => onDelete(post.id)}
+              className="text-red-500 hover:text-red-700"
+              aria-label="Delete post"
+            >
+              <FaTrash />
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -62,7 +72,7 @@ export default function PostsScreen() {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [selectedCategory, setSelectedCategory] = useState(categories[0]);
-
+  const [showMyPosts, setShowMyPosts] = useState(false);
   const [showCommentModal, setShowCommentModal] = useState(false);
   const [activePost, setActivePost] = useState(null);
   const [comments, setComments] = useState([]);
@@ -90,7 +100,8 @@ export default function PostsScreen() {
     const matchesSearch =
       post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       post.content.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesCategory && matchesSearch;
+    const matchesUser = !showMyPosts || post.author_id === user?.id;
+    return matchesCategory && matchesSearch && matchesUser;
   });
 
   async function handleAddPost() {
@@ -119,7 +130,7 @@ export default function PostsScreen() {
   async function handleUpvote(id) {
     try {
       await axios.post(`${API_BASE}/posts/${id}/upvote`, {}, { withCredentials: true });
-      fetchPosts(); // Reload posts after upvote toggle
+      fetchPosts();
     } catch (error) {
       console.error(error);
       alert(error.response?.data?.message || 'Error upvoting post');
@@ -160,6 +171,18 @@ export default function PostsScreen() {
     }
   }
 
+  async function handleDeletePost(id) {
+    if (!window.confirm('Are you sure you want to delete this post?')) return;
+
+    try {
+      await axios.delete(`${API_BASE}/posts/${id}`, { withCredentials: true });
+      setPosts(posts.filter(p => p.id !== id));
+    } catch (error) {
+      console.error(error);
+      alert(error.response?.data?.message || 'Error deleting post');
+    }
+  }
+
   return (
     <div className="min-h-screen bg-purple-50">
       <HeaderComponent />
@@ -185,6 +208,16 @@ export default function PostsScreen() {
               </option>
             ))}
           </select>
+          <button
+            onClick={() => setShowMyPosts(!showMyPosts)}
+            className={`px-4 py-2 rounded ${
+              showMyPosts
+                ? 'bg-purple-600 text-white hover:bg-purple-800'
+                : 'bg-purple-200 text-purple-800 hover:bg-purple-300'
+            }`}
+          >
+            {showMyPosts ? 'Show All Posts' : 'My Posts'}
+          </button>
         </div>
 
         {/* New Post Form */}
@@ -230,7 +263,14 @@ export default function PostsScreen() {
           <p className="text-center text-purple-600">No posts found.</p>
         ) : (
           filteredPosts.map((post) => (
-            <Post key={post.id} post={post} onUpvote={handleUpvote} onComment={handleComment} />
+            <Post
+              key={post.id}
+              post={post}
+              onUpvote={handleUpvote}
+              onComment={handleComment}
+              onDelete={handleDeletePost}
+              currentUserId={user?.id}
+            />
           ))
         )}
 

@@ -15,9 +15,12 @@ def get_posts():
     try:
         with DBConnection.get_cursor(dictionary=True) as cursor:
             cursor.execute("""
-                SELECT p.*, 
-                    (SELECT COUNT(*) FROM post_upvotes u WHERE u.post_id = p.id) AS upvotes_count
+                SELECT 
+                    p.*, 
+                    u.name AS author_name,
+                    (SELECT COUNT(*) FROM post_upvotes u2 WHERE u2.post_id = p.id) AS upvotes_count
                 FROM posts p
+                JOIN users u ON p.author_id = u.id
                 ORDER BY p.timestamp DESC
             """)
             posts = cursor.fetchall()
@@ -26,6 +29,7 @@ def get_posts():
         print(f"GET /api/posts error: {e}")
         return jsonify({"message": "Failed to retrieve posts", "error": str(e)}), 500
 
+
 @posts_bp.route('/posts', methods=['POST'])
 @JWTConfig.token_required
 def create_post(current_user):
@@ -33,6 +37,7 @@ def create_post(current_user):
     title = data.get('title')
     content = data.get('content')
     category = data.get('category')
+    author_id = current_user['user_id']  # use 'id' or 'user_id' depending on your JWT payload
 
     if not all([title, content, category]):
         return jsonify({"message": "Missing required fields"}), 400
@@ -42,10 +47,10 @@ def create_post(current_user):
     try:
         with DBConnection.get_cursor(dictionary=True) as cursor:
             cursor.execute("""
-                INSERT INTO posts (title, content, category, timestamp)
-                VALUES (%s, %s, %s, %s)
+                INSERT INTO posts (title, content, category, author_id, timestamp)
+                VALUES (%s, %s, %s, %s, %s)
                 RETURNING *
-            """, (title, content, category, timestamp))
+            """, (title, content, category, author_id, timestamp))
             new_post = cursor.fetchone()
             return jsonify({"message": "Post created successfully", "data": new_post}), 201
     except Exception as e:
