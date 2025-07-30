@@ -90,7 +90,7 @@ export default function PostsScreen() {
       const res = await axios.get(`${API_BASE}/posts`, { withCredentials: true });
       setPosts(res.data.data);
     } catch (error) {
-      console.error(error);
+      console.error('Error fetching posts:', error);
       alert(error.response?.data?.message || 'Error fetching posts');
     }
   }
@@ -122,7 +122,7 @@ export default function PostsScreen() {
       setContent('');
       setSelectedCategory(categories[0]);
     } catch (error) {
-      console.error(error);
+      console.error('Error adding post:', error);
       alert(error.response?.data?.message || 'Error adding post');
     }
   }
@@ -132,7 +132,7 @@ export default function PostsScreen() {
       await axios.post(`${API_BASE}/posts/${id}/upvote`, {}, { withCredentials: true });
       fetchPosts();
     } catch (error) {
-      console.error(error);
+      console.error('Error upvoting post:', error);
       alert(error.response?.data?.message || 'Error upvoting post');
     }
   }
@@ -146,7 +146,7 @@ export default function PostsScreen() {
       const res = await axios.get(`${API_BASE}/posts/${id}/comments`, { withCredentials: true });
       setComments(res.data.data);
     } catch (error) {
-      console.error(error);
+      console.error('Error fetching comments:', error);
       alert(error.response?.data?.message || 'Error fetching comments');
     }
   }
@@ -160,13 +160,13 @@ export default function PostsScreen() {
     try {
       const res = await axios.post(
         `${API_BASE}/posts/${activePost.id}/comments`,
-        { author: user.email, text: newCommentText },
+        { text: newCommentText },
         { withCredentials: true }
       );
       setComments([...comments, res.data.data]);
       setNewCommentText('');
     } catch (error) {
-      console.error(error);
+      console.error('Error posting comment:', error);
       alert(error.response?.data?.message || 'Error posting comment');
     }
   }
@@ -175,11 +175,25 @@ export default function PostsScreen() {
     if (!window.confirm('Are you sure you want to delete this post?')) return;
 
     try {
-      await axios.delete(`${API_BASE}/posts/${id}`, { withCredentials: true });
+      const res = await axios.delete(`${API_BASE}/posts/${id}`, { withCredentials: true });
       setPosts(posts.filter(p => p.id !== id));
+      alert(res.data.message || 'Post deleted successfully');
     } catch (error) {
-      console.error(error);
+      console.error('Error deleting post:', error);
       alert(error.response?.data?.message || 'Error deleting post');
+    }
+  }
+
+  async function handleDeleteComment(commentId) {
+    if (!window.confirm('Are you sure you want to delete this comment?')) return;
+
+    try {
+      const res = await axios.delete(`${API_BASE}/comments/${commentId}`, { withCredentials: true });
+      setComments(comments.filter(c => c.id !== commentId));
+      alert(res.data.message || 'Comment deleted successfully');
+    } catch (error) {
+      console.error('Error deleting comment:', error);
+      alert(error.response?.data?.message || 'Error deleting comment');
     }
   }
 
@@ -300,9 +314,18 @@ export default function PostsScreen() {
                   <p className="text-purple-600 text-center">No comments yet.</p>
                 ) : (
                   comments.map((comment) => (
-                    <div key={comment.id} className="bg-purple-50 p-3 rounded-xl border border-purple-200">
-                      <p className="text-sm text-purple-900 font-semibold">{comment.author || 'Anonymous'}</p>
+                    <div key={comment.id} className="bg-purple-50 p-3 rounded-xl border border-purple-200 relative">
+                      <p className="text-sm text-purple-900 font-semibold">{comment.author_name || 'Anonymous'}</p>
                       <p className="text-sm text-purple-700">{comment.text}</p>
+                      {comment.author_id === user?.id && (
+                        <button
+                          onClick={() => handleDeleteComment(comment.id)}
+                          className="absolute top-2 right-2 text-red-500 hover:text-red-700"
+                          aria-label="Delete comment"
+                        >
+                          <FaTrash />
+                        </button>
+                      )}
                     </div>
                   ))
                 )}

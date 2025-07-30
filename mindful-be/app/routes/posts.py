@@ -89,7 +89,7 @@ def update_post(post_id):
 
 @posts_bp.route('/posts/<int:post_id>', methods=['DELETE'])
 @JWTConfig.token_required
-def delete_post(post_id):
+def delete_post(current_user,post_id):
     try:
         with DBConnection.get_cursor(dictionary=True) as cursor:
             cursor.execute("DELETE FROM posts WHERE id = %s RETURNING id", (post_id,))
