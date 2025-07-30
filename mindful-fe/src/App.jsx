@@ -16,6 +16,7 @@ import ExerciseManagerScreen from "./screens/admin/AdminExerciseScreen";
 import CallHelplineScreen from "./screens/HelplineScreen";
 import ChatExpertScreen from "./screens/ExpertScreen"; // Expert Consultation Screen
 import UnauthorizedScreen from "./screens/UnauthorizedScreen";
+import ExpertDashboard from "./screens/expert/ExpertDashboard";
 
 function App() {
   return (
@@ -37,6 +38,7 @@ function App() {
         <Route path="/admin/dashboard" element={<AdminDashboard/>}/>
         <Route path="/admin/upload-music" element={<UploadMusicScreen/>}/>
         <Route path="/admin/upload-exercise" element={<ExerciseManagerScreen/>}/>
+        <Route path="/expert/dashboard" element={<ExpertDashboard />} />
       </Routes>
     </>
   );

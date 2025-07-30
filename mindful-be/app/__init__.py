@@ -33,4 +33,7 @@ def create_app():
 
     from app.routes.predict import prediction_bp
     app.register_blueprint(prediction_bp, url_prefix='/api')
+
+    from app.routes.chat_requests import chat_requests_bp
+    app.register_blueprint(chat_requests_bp, url_prefix='/api')
     return app
