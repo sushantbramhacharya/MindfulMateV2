@@ -1,34 +1,35 @@
-import React, { useState } from 'react';
-import axios from 'axios';
-import { useAuth } from '../context/AuthContext';
+import React, { useState } from "react";
+import axios from "axios";
+import { useAuth } from "../context/AuthContext";
 
 const LoginComponent = ({ setLoginSwitch, loginSwitch }) => {
   const { login } = useAuth();
 
-  const inputClass = "w-full bg-transparent border-b border-purple-600 text-purple-900 placeholder-purple-500 py-2 outline-none transition focus:border-purple-800";
+  const inputClass =
+    "w-full bg-transparent border-b border-purple-600 text-purple-900 placeholder-purple-500 py-2 outline-none transition focus:border-purple-800";
 
   const LoginForm = () => {
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const [error, setError] = useState('');
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+    const [error, setError] = useState("");
     const [rememberMe, setRememberMe] = useState(false);
 
     const handleLogin = async (e) => {
       e.preventDefault();
-      setError('');
+      setError("");
 
       if (!email || !password) {
-        setError('Please enter both email and password');
+        setError("Please enter both email and password");
         return;
       }
 
       try {
         const response = await axios.post(
-          'http://localhost:5000/api/auth/login',
+          "http://localhost:5000/api/auth/login",
           new URLSearchParams({ email, password }),
           {
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            withCredentials: true
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            withCredentials: true,
           }
         );
 
@@ -36,13 +37,14 @@ const LoginComponent = ({ setLoginSwitch, loginSwitch }) => {
           const userData = {
             id: response.data.user.id,
             email: response.data.user.email,
-            token: response.data.token
+            name: response.data.user.name,
+            token: response.data.token,
           };
           login(userData, rememberMe);
-          window.location.href = '/dashboard';
+          window.location.href = "/dashboard";
         }
       } catch (err) {
-        setError(err.response?.data?.error || 'Login failed');
+        setError(err.response?.data?.error || "Login failed");
       }
     };
 
@@ -89,48 +91,55 @@ const LoginComponent = ({ setLoginSwitch, loginSwitch }) => {
   };
 
   const RegisterForm = () => {
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const [confirmPassword, setConfirmPassword] = useState('');
-    const [dateOfBirth, setDateOfBirth] = useState('');
-    const [error, setError] = useState('');
+    const [name, setName] = useState(""); // Step 1
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+    const [confirmPassword, setConfirmPassword] = useState("");
+    const [dateOfBirth, setDateOfBirth] = useState("");
+    const [error, setError] = useState("");
 
     const handleRegister = async (e) => {
       e.preventDefault();
-      setError('');
+      setError("");
 
-      if (!email || !password || !confirmPassword || !dateOfBirth) {
-        setError('Please fill in all fields');
+      if (!name || !email || !password || !confirmPassword || !dateOfBirth) {
+        setError("Please fill in all fields");
         return;
       }
 
       if (password.length < 6) {
-        setError('Password must be at least 6 characters');
+        setError("Password must be at least 6 characters");
         return;
       }
 
       if (password !== confirmPassword) {
-        setError('Passwords do not match');
+        setError("Passwords do not match");
         return;
       }
 
       try {
         const response = await axios.post(
-          'http://localhost:5000/api/auth/register',
-          new URLSearchParams({ email, password, confirmPassword, dateOfBirth }),
+          "http://localhost:5000/api/auth/register",
+          new URLSearchParams({
+            name,
+            email,
+            password,
+            confirmPassword,
+            dateOfBirth,
+          }), // Step 3
           {
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            withCredentials: true
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            withCredentials: true,
           }
         );
 
         if (response.data?.user_id) {
           const loginResponse = await axios.post(
-            'http://localhost:5000/api/auth/login',
+            "http://localhost:5000/api/auth/login",
             new URLSearchParams({ email, password }),
             {
-              headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-              withCredentials: true
+              headers: { "Content-Type": "application/x-www-form-urlencoded" },
+              withCredentials: true,
             }
           );
 
@@ -138,20 +147,31 @@ const LoginComponent = ({ setLoginSwitch, loginSwitch }) => {
             const userData = {
               id: loginResponse.data.user.id,
               email: loginResponse.data.user.email,
-              token: loginResponse.data.token
+              name: loginResponse.data.user.name,
+              token: loginResponse.data.token,
             };
             login(userData, true);
-            window.location.href = '/dashboard';
+            window.location.href = "/dashboard";
           }
         }
       } catch (err) {
-        setError(err.response?.data?.error || 'Registration failed');
+        setError(err.response?.data?.error || "Registration failed");
       }
     };
 
     return (
       <form onSubmit={handleRegister} className="flex flex-col space-y-6">
         {error && <p className="text-red-600 text-sm font-medium">{error}</p>}
+
+        {/* Step 2: Name field */}
+        <input
+          type="text"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="Full Name"
+          className={inputClass}
+          autoComplete="name"
+        />
 
         <input
           type="email"

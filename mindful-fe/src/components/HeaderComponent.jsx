@@ -29,7 +29,7 @@ const HeaderComponent = () => {
 
       <div className="flex items-center gap-4">
         <span className="hidden md:inline text-purple-800 text-sm">
-          Welcome, {user?.email}
+          Welcome, {user?.name}
         </span>
         {user?.id === 4 && (
           <Link
