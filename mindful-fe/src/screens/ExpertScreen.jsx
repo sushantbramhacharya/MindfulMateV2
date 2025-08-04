@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import HeaderComponent from "../components/HeaderComponent";
 import { useAuth } from "../context/AuthContext";
@@ -24,6 +24,16 @@ const ChatExpertScreen = () => {
     buyAmount && !isNaN(buyAmount) && buyAmount > 0
       ? buyAmount * PRICE_PER_MESSAGE
       : 0;
+
+  // Ref for the messages container div
+  const messagesEndRef = useRef(null);
+
+  // Scroll to bottom helper
+  const scrollToBottom = () => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollTop = messagesEndRef.current.scrollHeight;
+    }
+  };
 
   // Fetch chat count from backend API
   useEffect(() => {
@@ -68,6 +78,11 @@ const ChatExpertScreen = () => {
   useEffect(() => {
     fetchMessages();
   }, [user]);
+
+  // Scroll to bottom whenever chatMessages change
+  useEffect(() => {
+    scrollToBottom();
+  }, [chatMessages]);
 
   const openModal = () => setModalOpen(true);
   const closeModal = () => {
@@ -146,7 +161,10 @@ const ChatExpertScreen = () => {
             </button>
           </div>
 
-          <div className="flex-grow overflow-y-auto bg-white rounded-md p-4 border border-purple-300 mb-4 flex flex-col gap-3">
+          <div
+            ref={messagesEndRef}
+            className="flex-grow overflow-y-auto bg-white rounded-md p-4 border border-purple-300 mb-4 flex flex-col gap-3"
+          >
             {chatMessages.length === 0 && (
               <p className="text-purple-500 italic text-center mt-auto mb-auto">
                 Start chatting by sending a message.

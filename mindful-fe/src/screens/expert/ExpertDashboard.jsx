@@ -1,82 +1,140 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
+import axios from "axios";
 import HeaderComponent from "../../components/HeaderComponent";
 
-const dummyAcceptedUsers = [
-  { id: 101, user_name: "Alice Johnson" },
-  { id: 102, user_name: "Bob Smith" },
-  { id: 103, user_name: "Charlie Brown" },
-];
-
-const dummyChats = {
-  101: [
-    { sender: "user", text: "Hello, I need some help." },
-    { sender: "expert", text: "Hi Alice! How can I assist you today?" },
-  ],
-  102: [
-    { sender: "user", text: "I'm feeling anxious." },
-    { sender: "expert", text: "Sorry to hear that, Bob. Tell me more." },
-  ],
-  103: [{ sender: "user", text: "Is it normal to feel stressed sometimes?" }],
-};
-
 const ExpertDashboard = () => {
-  const [selectedUserId, setSelectedUserId] = useState(dummyAcceptedUsers[0].id);
-  const [chatMessages, setChatMessages] = useState(dummyChats);
+  const [acceptedUsers, setAcceptedUsers] = useState([]);
+  const [selectedUserId, setSelectedUserId] = useState(null);
+  const [chatMessages, setChatMessages] = useState([]);
   const [inputMessage, setInputMessage] = useState("");
+  const chatMessagesRef = useRef(null);
 
-  const selectedUser = dummyAcceptedUsers.find((u) => u.id === selectedUserId);
+  // Fetch accepted users on mount
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const res = await axios.get("http://localhost:5000/api/expert/users", {
+          withCredentials: true,
+        });
+        if (Array.isArray(res.data)) {
+          setAcceptedUsers(res.data);
+          if (res.data.length > 0) setSelectedUserId(res.data[0].user_id);
+        }
+      } catch (err) {
+        console.error("Failed to fetch accepted users:", err);
+      }
+    };
+    fetchUsers();
+  }, []);
 
-  const handleSendMessage = () => {
+  // Fetch messages whenever selectedUserId changes
+  useEffect(() => {
+    if (!selectedUserId) return;
+
+    const fetchMessages = async () => {
+      try {
+        const res = await axios.get(
+          `http://localhost:5000/api/messages/${selectedUserId}`,
+          { withCredentials: true }
+        );
+        if (Array.isArray(res.data)) {
+          setChatMessages(
+            res.data.map((msg) => ({
+              sender: msg.sender_type,
+              text: msg.content,
+            }))
+          );
+        }
+      } catch (err) {
+        console.error("Failed to fetch messages:", err);
+        setChatMessages([]);
+      }
+    };
+    fetchMessages();
+  }, [selectedUserId]);
+
+  // Scroll to bottom whenever chatMessages update
+  useEffect(() => {
+    if (chatMessagesRef.current) {
+      chatMessagesRef.current.scrollTo({
+        top: chatMessagesRef.current.scrollHeight,
+        behavior: "smooth",
+      });
+    }
+  }, [chatMessages]);
+
+  // Send message as expert
+  const handleSendMessage = async () => {
     const trimmed = inputMessage.trim();
-    if (!trimmed) return;
+    if (!trimmed || !selectedUserId) return;
 
-    setChatMessages((prevChats) => {
-      const userChat = prevChats[selectedUserId] || [];
-      return {
-        ...prevChats,
-        [selectedUserId]: [...userChat, { sender: "expert", text: trimmed }],
-      };
-    });
-
-    setInputMessage("");
+    try {
+      const res = await axios.post(
+        `http://localhost:5000/api/expert/messages/${selectedUserId}`,
+        { content: trimmed },
+        { withCredentials: true }
+      );
+      if (res.status === 201 && res.data.data) {
+        setChatMessages((prev) => [
+          ...prev,
+          { sender: "expert", text: trimmed },
+        ]);
+        setInputMessage("");
+      }
+    } catch (err) {
+      console.error("Failed to send message:", err);
+      alert("Failed to send message");
+    }
   };
+
+  const selectedUser = acceptedUsers.find((u) => u.user_id === selectedUserId);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-100 via-purple-200 to-purple-300 flex flex-col">
       <HeaderComponent />
 
-      <main className="flex-grow flex w-full p-6 gap-6">
-        {/* Left panel - user list */}
+      <main className="flex-grow flex w-full p-6 gap-6 min-h-0">
+        {/* Left panel */}
         <aside className="w-[300px] bg-white/60 backdrop-blur-md rounded-2xl shadow-md border border-purple-300 overflow-auto">
           <h2 className="text-2xl font-bold text-purple-900 p-4 border-b border-purple-300">
             Users to Chat
           </h2>
           <ul>
-            {dummyAcceptedUsers.map((user) => (
+            {acceptedUsers.map((user) => (
               <li
-                key={user.id}
-                onClick={() => setSelectedUserId(user.id)}
+                key={user.user_id}
+                onClick={() => setSelectedUserId(user.user_id)}
                 className={`cursor-pointer p-4 border-b border-purple-200 hover:bg-purple-100 ${
-                  user.id === selectedUserId ? "bg-purple-200 font-semibold" : ""
+                  user.user_id === selectedUserId
+                    ? "bg-purple-200 font-semibold"
+                    : ""
                 }`}
               >
-                {user.user_name}
+                {user.name}
               </li>
             ))}
           </ul>
         </aside>
 
-        {/* Right panel - chat */}
-        <section className="flex-1 flex flex-col bg-white/70 backdrop-blur-md rounded-2xl shadow-md border border-purple-300">
+        {/* Right panel */}
+        <section className="flex-1 flex flex-col bg-white/70 backdrop-blur-md rounded-2xl shadow-md border border-purple-300 min-h-0">
           <header className="p-4 border-b border-purple-300 text-purple-900 font-bold text-xl">
-            Chat with {selectedUser?.user_name || "User"}
+            Chat with {selectedUser?.name || "User"}
           </header>
 
+          {/* Scrollable chat messages container */}
           <div
-            className="flex-1 overflow-y-auto p-6 flex flex-col gap-4"
+            ref={chatMessagesRef}
+            className="flex-grow overflow-y-auto p-6 flex flex-col gap-4"
             style={{ minHeight: 0 }}
           >
-            {(chatMessages[selectedUserId] || []).map((msg, idx) => (
+            {chatMessages.length === 0 && (
+              <p className="text-purple-500 italic text-center mt-auto mb-auto">
+                No messages yet. Start chatting!
+              </p>
+            )}
+
+            {chatMessages.map((msg, idx) => (
               <div
                 key={idx}
                 className={`max-w-[70%] p-3 rounded-lg break-words ${
@@ -88,12 +146,6 @@ const ExpertDashboard = () => {
                 {msg.text}
               </div>
             ))}
-
-            {(chatMessages[selectedUserId] || []).length === 0 && (
-              <p className="text-purple-500 italic text-center mt-auto mb-auto">
-                No messages yet. Start chatting!
-              </p>
-            )}
           </div>
 
           <footer className="p-4 border-t border-purple-300 flex gap-4">
