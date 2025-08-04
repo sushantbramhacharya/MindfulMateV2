@@ -1,7 +1,13 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
 import HeaderComponent from "../components/HeaderComponent";
 import { useAuth } from "../context/AuthContext";
-import { FaMoneyBillWave, FaComments, FaPaperPlane, FaTimes } from "react-icons/fa";
+import {
+  FaMoneyBillWave,
+  FaComments,
+  FaPaperPlane,
+  FaTimes,
+} from "react-icons/fa";
 
 const PRICE_PER_MESSAGE = 25;
 
@@ -12,12 +18,32 @@ const ChatExpertScreen = () => {
   const [chatMessages, setChatMessages] = useState([]);
   const [inputMessage, setInputMessage] = useState("");
 
-  // Modal open state
   const [modalOpen, setModalOpen] = useState(false);
-
-  // Modal input & price calculation
   const [buyAmount, setBuyAmount] = useState("");
-  const totalPrice = buyAmount && !isNaN(buyAmount) && buyAmount > 0 ? buyAmount * PRICE_PER_MESSAGE : 0;
+  const totalPrice =
+    buyAmount && !isNaN(buyAmount) && buyAmount > 0
+      ? buyAmount * PRICE_PER_MESSAGE
+      : 0;
+
+  // Fetch chat count from backend API with axios
+  useEffect(() => {
+    const fetchChatCount = async () => {
+      if (!user) return; // If no token, do not fetch
+
+      try {
+        const res = await axios.get("http://localhost:5000/api/chat-count", {
+          withCredentials: true,
+        });
+        if (res.data && typeof res.data.chat_count === "number") {
+          setMessagesLeft(res.data.chat_count);
+        }
+      } catch (err) {
+        console.error("Failed to fetch chat count:", err);
+      }
+    };
+
+    fetchChatCount();
+  }, [user]);
 
   const openModal = () => setModalOpen(true);
   const closeModal = () => {
@@ -32,10 +58,16 @@ const ChatExpertScreen = () => {
       return;
     }
     if (!amount || amount <= 0) {
-      alert("Please enter a valid number of messages to buy (greater than 0).");
+      alert(
+        "Please enter a valid number of messages to buy (greater than 0)."
+      );
       return;
     }
-    alert(`Payment successful! You purchased ${amount} chat messages for Rs. ${amount * PRICE_PER_MESSAGE}.`);
+    alert(
+      `Payment successful! You purchased ${amount} chat messages for Rs. ${
+        amount * PRICE_PER_MESSAGE
+      }.`
+    );
     setMessagesLeft((prev) => prev + amount);
     closeModal();
   };
@@ -48,15 +80,20 @@ const ChatExpertScreen = () => {
       return;
     }
 
-    setChatMessages((prev) => [...prev, { sender: "user", text: inputMessage.trim() }]);
+    setChatMessages((prev) => [
+      ...prev,
+      { sender: "user", text: inputMessage.trim() },
+    ]);
     setMessagesLeft((prev) => prev - 1);
     setInputMessage("");
 
-    // Simulate expert reply
     setTimeout(() => {
       setChatMessages((prev) => [
         ...prev,
-        { sender: "expert", text: "Thank you for your message. How can I assist you further?" },
+        {
+          sender: "expert",
+          text: "Thank you for your message. How can I assist you further?",
+        },
       ]);
     }, 1000);
   };
@@ -109,7 +146,11 @@ const ChatExpertScreen = () => {
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
               className="flex-grow p-3 rounded border border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-500"
-              placeholder={messagesLeft > 0 ? "Type your message here..." : "Buy messages to chat"}
+              placeholder={
+                messagesLeft > 0
+                  ? "Type your message here..."
+                  : "Buy messages to chat"
+              }
               onKeyDown={(e) => {
                 if (e.key === "Enter") handleSendMessage();
               }}
@@ -128,7 +169,6 @@ const ChatExpertScreen = () => {
         </div>
       </main>
 
-      {/* Modal Overlay */}
       {modalOpen && (
         <div
           className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
@@ -148,10 +188,12 @@ const ChatExpertScreen = () => {
               <FaTimes />
             </button>
 
-            <h3 className="text-2xl font-bold text-purple-900 mb-4">Buy Chat Messages</h3>
+            <h3 className="text-2xl font-bold text-purple-900 mb-4">
+              Buy Chat Messages
+            </h3>
 
             <label className="block text-purple-800 font-semibold mb-2">
-              Enter number of messages to buy (Rs. {PRICE_PER_MESSAGE} per message):
+              Enter number of messages to buy (Rs. {PRICE_PER_MESSAGE} each):
             </label>
             <input
               type="number"

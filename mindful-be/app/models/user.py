@@ -5,19 +5,20 @@ import psycopg2
 class UserModel:
     @staticmethod
     def create_user(name, email, password, date_of_birth):
-        """Create a new user in the database"""
+        """Create a new user in the database with 5 default chats"""
         try:
             with DBConnection.get_cursor() as cursor:
                 hashed_password = generate_password_hash(password)
                 cursor.execute(
-                    """INSERT INTO users (name, email, password_hash, date_of_birth) 
-                    VALUES (%s, %s, %s, %s) RETURNING id""",
-                    (name, email, hashed_password, date_of_birth)
+                    """
+                    INSERT INTO users (name, email, password_hash, date_of_birth, chat_count) 
+                    VALUES (%s, %s, %s, %s, %s) RETURNING id
+                    """,
+                    (name, email, hashed_password, date_of_birth, 5)
                 )
                 return cursor.fetchone()[0]
         except psycopg2.IntegrityError:
             return None  # Email already exists
-
     @staticmethod
     def get_user_by_email(email):
         """Retrieve a user by email"""
