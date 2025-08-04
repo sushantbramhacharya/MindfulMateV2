@@ -25,11 +25,11 @@ const ChatExpertScreen = () => {
       ? buyAmount * PRICE_PER_MESSAGE
       : 0;
 
-  // Fetch chat count from backend API with axios
+  // Fetch chat count from backend API
   useEffect(() => {
-    const fetchChatCount = async () => {
-      if (!user) return; // If no token, do not fetch
+    if (!user) return;
 
+    const fetchChatCount = async () => {
       try {
         const res = await axios.get("http://localhost:5000/api/chat-count", {
           withCredentials: true,
@@ -43,6 +43,30 @@ const ChatExpertScreen = () => {
     };
 
     fetchChatCount();
+  }, [user]);
+
+  // Fetch messages function
+  const fetchMessages = async () => {
+    if (!user) return;
+    try {
+      const res = await axios.get("http://localhost:5000/api/messages", {
+        withCredentials: true,
+      });
+      if (Array.isArray(res.data)) {
+        const formatted = res.data.map((msg) => ({
+          sender: msg.sender_type, // use sender_type from backend: 'user' or 'expert'
+          text: msg.content,
+        }));
+        setChatMessages(formatted);
+      }
+    } catch (err) {
+      console.error("Failed to fetch messages:", err);
+    }
+  };
+
+  // Fetch messages on mount and user change
+  useEffect(() => {
+    fetchMessages();
   }, [user]);
 
   const openModal = () => setModalOpen(true);
@@ -72,7 +96,7 @@ const ChatExpertScreen = () => {
     closeModal();
   };
 
-  const handleSendMessage = () => {
+  const handleSendMessage = async () => {
     if (!inputMessage.trim()) return;
 
     if (messagesLeft <= 0) {
@@ -80,22 +104,25 @@ const ChatExpertScreen = () => {
       return;
     }
 
-    setChatMessages((prev) => [
-      ...prev,
-      { sender: "user", text: inputMessage.trim() },
-    ]);
-    setMessagesLeft((prev) => prev - 1);
-    setInputMessage("");
+    try {
+      // Send message to backend
+      const res = await axios.post(
+        "http://localhost:5000/api/messages",
+        { content: inputMessage.trim() },
+        { withCredentials: true }
+      );
 
-    setTimeout(() => {
-      setChatMessages((prev) => [
-        ...prev,
-        {
-          sender: "expert",
-          text: "Thank you for your message. How can I assist you further?",
-        },
-      ]);
-    }, 1000);
+      if (res.status === 201 && res.data.data) {
+        setMessagesLeft((prev) => prev - 1);
+        setInputMessage("");
+
+        // Refresh messages from backend after sending
+        fetchMessages();
+      }
+    } catch (err) {
+      console.error("Failed to send message:", err);
+      alert("Failed to send message. Please try again.");
+    }
   };
 
   return (
