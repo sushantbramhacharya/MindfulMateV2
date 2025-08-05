@@ -176,32 +176,42 @@ def get_accepted_users(current_user):
 
     try:
         with DBConnection.get_cursor(dictionary=True) as cursor:
-            # Get all distinct user IDs who have messages with expert
+            # Get distinct user IDs with their latest message timestamp
             cursor.execute("""
-                SELECT DISTINCT 
+                SELECT 
                     CASE
                         WHEN sender_id = 8 THEN receiver_id
                         ELSE sender_id
-                    END AS user_id
+                    END AS user_id,
+                    MAX(timestamp) AS latest_timestamp
                 FROM messages
                 WHERE sender_id = 8 OR receiver_id = 8
+                GROUP BY 
+                    CASE
+                        WHEN sender_id = 8 THEN receiver_id
+                        ELSE sender_id
+                    END
             """)
-            user_ids = [row['user_id'] for row in cursor.fetchall()]
+            user_data = cursor.fetchall()
             
-            if not user_ids:
+            if not user_data:
                 return jsonify([]), 200
             
             # Get user details for these IDs
+            user_ids = [row['user_id'] for row in user_data]
             format_strings = ",".join(["%s"] * len(user_ids))
             cursor.execute(f"""
                 SELECT id AS user_id, name
                 FROM users
                 WHERE id IN ({format_strings})
-                ORDER BY name
             """, tuple(user_ids))
             users = cursor.fetchall()
-
+            
+            # Sort users by latest timestamp
+            timestamp_lookup = {row['user_id']: row['latest_timestamp'] for row in user_data}
+            users.sort(key=lambda x: timestamp_lookup.get(x['user_id'], ''), reverse=True)
+            
             return jsonify(users), 200
     except Exception as e:
         print(f"GET /expert/users error: {e}")
-        return jsonify({"message": "Failed to fetch users", "error": str(e)}), 500
+        return jsonify({"message": "Failed to fetch users"}), 500

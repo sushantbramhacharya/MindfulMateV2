@@ -93,13 +93,13 @@ const ExpertDashboard = () => {
     <div className="min-h-screen bg-gradient-to-br from-purple-100 via-purple-200 to-purple-300 flex flex-col">
       <HeaderComponent />
 
-      <main className="flex-grow flex w-full p-6 gap-6 min-h-0">
-        {/* Left panel */}
-        <aside className="w-[300px] bg-white/60 backdrop-blur-md rounded-2xl shadow-md border border-purple-300 overflow-auto">
-          <h2 className="text-2xl font-bold text-purple-900 p-4 border-b border-purple-300">
+      <main className="flex-grow flex w-full p-6 gap-6 min-h-0 overflow-hidden">
+        {/* Left panel - User list */}
+        <aside className="w-[300px] bg-white/60 backdrop-blur-md rounded-2xl shadow-md border border-purple-300 flex flex-col">
+          <h2 className="text-2xl font-bold text-purple-900 p-4 border-b border-purple-300 flex-shrink-0">
             Users to Chat
           </h2>
-          <ul>
+          <ul className="flex-grow overflow-y-auto">
             {acceptedUsers.map((user) => (
               <li
                 key={user.user_id}
@@ -116,17 +116,16 @@ const ExpertDashboard = () => {
           </ul>
         </aside>
 
-        {/* Right panel */}
+        {/* Right panel - Chat area */}
         <section className="flex-1 flex flex-col bg-white/70 backdrop-blur-md rounded-2xl shadow-md border border-purple-300 min-h-0">
-          <header className="p-4 border-b border-purple-300 text-purple-900 font-bold text-xl">
+          <header className="p-4 border-b border-purple-300 text-purple-900 font-bold text-xl flex-shrink-0">
             Chat with {selectedUser?.name || "User"}
           </header>
 
           {/* Scrollable chat messages container */}
           <div
             ref={chatMessagesRef}
-            className="flex-grow overflow-y-auto p-6 flex flex-col gap-4"
-            style={{ minHeight: 0 }}
+            className="flex-grow overflow-y-auto p-6 flex flex-col gap-4 max-h-[calc(100vh-300px)]"
           >
             {chatMessages.length === 0 && (
               <p className="text-purple-500 italic text-center mt-auto mb-auto">
@@ -148,7 +147,7 @@ const ExpertDashboard = () => {
             ))}
           </div>
 
-          <footer className="p-4 border-t border-purple-300 flex gap-4">
+          <footer className="p-4 border-t border-purple-300 flex gap-4 flex-shrink-0">
             <input
               type="text"
               value={inputMessage}
