@@ -17,7 +17,6 @@ const ChatExpertScreen = () => {
   const [messagesLeft, setMessagesLeft] = useState(0);
   const [chatMessages, setChatMessages] = useState([]);
   const [inputMessage, setInputMessage] = useState("");
-
   const [modalOpen, setModalOpen] = useState(false);
   const [buyAmount, setBuyAmount] = useState("");
   const totalPrice =
@@ -25,7 +24,6 @@ const ChatExpertScreen = () => {
       ? buyAmount * PRICE_PER_MESSAGE
       : 0;
 
-  // Ref for the messages container div
   const messagesEndRef = useRef(null);
 
   // Scroll to bottom helper
@@ -36,22 +34,21 @@ const ChatExpertScreen = () => {
   };
 
   // Fetch chat count from backend API
+  const fetchChatCount = async () => {
+    try {
+      const res = await axios.get("http://localhost:5000/api/chat-count", {
+        withCredentials: true,
+      });
+      if (res.data && typeof res.data.chat_count === "number") {
+        setMessagesLeft(res.data.chat_count);
+      }
+    } catch (err) {
+      console.error("Failed to fetch chat count:", err);
+    }
+  };
+
   useEffect(() => {
     if (!user) return;
-
-    const fetchChatCount = async () => {
-      try {
-        const res = await axios.get("http://localhost:5000/api/chat-count", {
-          withCredentials: true,
-        });
-        if (res.data && typeof res.data.chat_count === "number") {
-          setMessagesLeft(res.data.chat_count);
-        }
-      } catch (err) {
-        console.error("Failed to fetch chat count:", err);
-      }
-    };
-
     fetchChatCount();
   }, [user]);
 
@@ -64,7 +61,7 @@ const ChatExpertScreen = () => {
       });
       if (Array.isArray(res.data)) {
         const formatted = res.data.map((msg) => ({
-          sender: msg.sender_type, // use sender_type from backend: 'user' or 'expert'
+          sender: msg.sender_type,
           text: msg.content,
         }));
         setChatMessages(formatted);
@@ -84,31 +81,53 @@ const ChatExpertScreen = () => {
     scrollToBottom();
   }, [chatMessages]);
 
+  // Check for payment callback
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const pidx = params.get('pidx');
+    if (pidx) {
+      // Payment callback detected, refetch chat count
+      fetchChatCount();
+      // Clear query parameters from URL
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }, []);
+
   const openModal = () => setModalOpen(true);
   const closeModal = () => {
     setModalOpen(false);
     setBuyAmount("");
   };
 
-  const handleBuyChat = () => {
+  const handleBuyChat = async () => {
     const amount = parseInt(buyAmount, 10);
     if (!user) {
       alert("Please log in to buy chat messages.");
       return;
     }
     if (!amount || amount <= 0) {
-      alert(
-        "Please enter a valid number of messages to buy (greater than 0)."
-      );
+      alert("Please enter a valid number of messages to buy (greater than 0).");
       return;
     }
-    alert(
-      `Payment successful! You purchased ${amount} chat messages for Rs. ${
-        amount * PRICE_PER_MESSAGE
-      }.`
-    );
-    setMessagesLeft((prev) => prev + amount);
-    closeModal();
+
+    try {
+      const res = await axios.post(
+        "http://localhost:5000/api/buy-messages",
+        {
+          chat_credits: amount,
+          amount: amount * PRICE_PER_MESSAGE * 100, // Convert NPR to paisa
+        },
+        { withCredentials: true }
+      );
+      if (res.data.payment_url) {
+        window.location.href = res.data.payment_url;
+      } else {
+        alert("Failed to initiate payment. Please try again.");
+      }
+    } catch (err) {
+      console.error("Failed to initiate payment:", err);
+      alert("Failed to initiate payment: " + (err.response?.data?.message || "Unknown error"));
+    }
   };
 
   const handleSendMessage = async () => {
@@ -120,7 +139,6 @@ const ChatExpertScreen = () => {
     }
 
     try {
-      // Send message to backend
       const res = await axios.post(
         "http://localhost:5000/api/messages",
         { content: inputMessage.trim() },
@@ -130,8 +148,6 @@ const ChatExpertScreen = () => {
       if (res.status === 201 && res.data.data) {
         setMessagesLeft((prev) => prev - 1);
         setInputMessage("");
-
-        // Refresh messages from backend after sending
         fetchMessages();
       }
     } catch (err) {
@@ -152,7 +168,6 @@ const ChatExpertScreen = () => {
 
           <div className="mb-4 text-purple-900 font-semibold flex justify-between items-center">
             <span>Messages left: {messagesLeft}</span>
-
             <button
               onClick={openModal}
               className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-full font-semibold shadow transition"
